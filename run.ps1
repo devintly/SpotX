@@ -64,17 +64,11 @@ param
     [Parameter(HelpMessage = 'Disable new right sidebar.')]
     [switch]$rightsidebar_off,
 
-    [Parameter(HelpMessage = 'Do not enable enhance playlist.')]
-    [switch]$enhance_playlist_off,
-    
-    [Parameter(HelpMessage = 'Do not enable enhance liked songs.')]
-    [switch]$enhance_like_off,
-
-    [Parameter(HelpMessage = 'Enable enhance playlist & liked songs.')]
-    [switch]$enhanceSongs,
-
     [Parameter(HelpMessage = 'it`s killing the heart icon, you`re able to save and choose the destination for any song, playlist, or podcast')]
     [switch]$plus,
+
+    [Parameter(HelpMessage = 'Enabled the big cards for home page')]
+    [switch]$canvasHome,
 
     [Parameter(HelpMessage = 'Enable funny progress bar.')]
     [switch]$funnyprogressBar,
@@ -369,7 +363,7 @@ if (!($version -and $version -match $match_v)) {
     }
     else {  
         # Recommended version for Win 10-12
-        $onlineFull = "1.2.37.701.ge66eb7bc-1204"
+        $onlineFull = "1.2.44.405.g81fd6352-5851"
     }
 }
 else {
@@ -1155,30 +1149,26 @@ function Helper($paramname) {
             $Disable = $webjson.others.DisableExp
             $Custom = $webjson.others.CustomExp
 
-            if ($enhance_like_off) { Remove-Json -j $Enable -p'EnhanceLikedSongs' }
-            if ($enhance_playlist_off) { Remove-Json -j $Enable -p 'EnhancePlaylist' }
-            
+            if ([version]$offline -eq [version]'1.2.37.701' -or [version]$offline -eq [version]'1.2.38.720' ) { 
+                Move-Json -n 'DevicePickerSidePanel' -t $Enable -f $Disable
+            }
 
-            if ($enhanceSongs -and [version]$offline -le [version]'1.2.25.1011') { 
-                Move-Json -n 'SmartShuffle' -t $Enable -f $Disable 
-            }
-            else { 
-             
-                if ([version]$offline -ge [version]'1.2.22.980') {
-                    Move-Json -n "EnhanceLikedSongs", "EnhancePlaylist"-t $Enable -f $Disable
-                }
-             
-            }
+            if ([version]$offline -ge [version]'1.2.41.434' -and $lyrics_block) { Move-Json -n 'Lyrics' -t $Enable -f $Disable } 
+
             if ([version]$offline -eq [version]'1.2.30.1135') { Move-Json -n 'QueueOnRightPanel' -t $Enable -f $Disable }
 
-            if (!($plus)) { Move-Json -n 'Plus' -t $Enable -f $Disable }
+            if (!($plus)) { Move-Json -n "Plus", "AlignedCurationSavedIn" -t $Enable -f $Disable }
 
             if (!($topsearchbar)) { 
-                Move-Json -n "GlobalNavBar" -t $Enable -f $Disable 
+                Move-Json -n "GlobalNavBar", "RecentSearchesDropdown" -t $Enable -f $Disable 
                 $Custom.GlobalNavBar.value = "control"
             }
 
             if (!($funnyprogressbar)) { Move-Json -n 'HeBringsNpb' -t $Enable -f $Disable }
+
+            if (!($canvasHome)) { Move-Json -n "canvasHome", "canvasHomeAudioPreviews" -t $Enable -f $Disable }
+
+            
 
             # disable subfeed filter chips on home
             if ($homesub_off) { 
@@ -1325,6 +1315,9 @@ function Helper($paramname) {
 
             if (!($lyrics_block)) { Remove-Json -j $VarJs -p "lyrics-block" }
 
+            else { 
+                Remove-Json -j $VarJs -p "lyrics-old-on"
+            }
 
             if (!($devtools)) { Remove-Json -j $VarJs -p "dev-tools" }
 
